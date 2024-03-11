@@ -32,7 +32,7 @@ public class MatrixMult {
 
             numberOfThreads = Integer.parseInt(args[2]);
             if (numberOfThreads < 0 || numberOfThreads > A.nrows) {
-                throw new Exception("Licbza watkow jest nieprawidlowa");
+                throw new Exception("");
             }
         } catch (Exception e) {
             throw new Exception("Wprowadzone dane sa niewlasciwe");
