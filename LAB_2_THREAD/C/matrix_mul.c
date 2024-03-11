@@ -18,6 +18,8 @@ typedef struct ThreadArgs_T
     ThreadResults results;
 } ThreadArgs;
 
+double sum_of_Elements_Of_Matrix_Result = 0;
+
 void mnoz_thread(ThreadArgs *args)
 {
     int start_row_A = 0;
@@ -36,6 +38,7 @@ void mnoz_thread(ThreadArgs *args)
                 sum += args->mat_A[i][k] * args->mat_B[k][column];
             }
             args->mat_Results[i][column] = sum;
+            sum_of_Elements_Of_Matrix_Result += sum;
             sum_of_squares += sum * sum;
         }
     }
@@ -187,9 +190,11 @@ int main(int argc, char** argv)
     print_matrix(mat_A, rows_A, rows_B);
     printf("B:\n");
     print_matrix(mat_B, rows_B, cols_B);
-    printf("Results:\n");
+    printf("Wynik:\n");
     print_matrix(mat_Results, rows_A, cols_B);
+    printf("Suma elementów wyniku: %f\n", sum_of_Elements_Of_Matrix_Result);
     printf("Frobenius norm: %f\n", frobenius_norm);
+    
 
     for (int i = 0; i < cols_B; i++)
     {
