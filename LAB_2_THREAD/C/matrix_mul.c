@@ -169,13 +169,14 @@ int main(int argc, char **argv)
     print_matrix(B, mb, nb);
     if (argc < 2)
     {
-        printf("not enough arguments. ./a <num_threads>");
+        printf("złe wywołanie. ./a <num_threads>");
+        return -1;
     }
     int number_threads = atoi(argv[1]);
-    number_threads = 2;
-    if (number_threads < 1)
+    if (number_threads < 1 || number_threads > ma)
     {
-        printf("not enough arguments. ./a <num_threads>");
+        printf("złe wywołanie. ./a <num_threads>");
+        return -1;
     }
     mnoz(number_threads, A, ma, na, B, mb, nb, C);
 
