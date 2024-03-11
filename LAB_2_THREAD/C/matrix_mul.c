@@ -21,13 +21,15 @@ void mnoz_thread(ThreadArgs *args)
     }
     for (int i = start; i < start + args->divisions[args->id]; i++)
     {
-        double s = 0;
-        for (int k = 0; k < args->col_a; k++)
-        {
-            s += args->A[i][k] * args->B[k][i];
-                
+        for(int column = 0; column < args->col_b;column++){
+            double s = 0;
+            for (int k = 0; k < args->col_a; k++)
+            {
+                s += args->A[i][k] * args->B[k][column];
+                    
+            }
+            args->C[i][column] = s;
         }
-        args->C[i][i] = s;
     }
 }
 
