@@ -2,87 +2,99 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+typedef struct ThreadResults_T
+{
+    double sum_of_squares;
+} ThreadResults;
+
 typedef struct ThreadArgs_T
 {
-    int id;
-    int *divisions;
-    double **A;
-    double **B;
-    double **C;
-    int row_a, col_b, col_a;
+    int thread_num;
+    int* works_per_group;
+    double** mat_A;
+    double** mat_B;
+    double** mat_Results;
+    int rows_A, cols_A, cols_B;
+    ThreadResults results;
 } ThreadArgs;
 
 void mnoz_thread(ThreadArgs *args)
 {
-    int start = 0;
-    for (int i = 0; i < args->id; i++)
+    int start_row_A = 0;
+    for (int i = 0; i < args->thread_num; i++)
     {
-        start += args->divisions[i];
+        start_row_A += args->works_per_group[i];
     }
-    for (int i = start; i < start + args->divisions[args->id]; i++)
+
+    double sum_of_squares = 0.0;
+    for (int i = start_row_A; i < start_row_A + args->works_per_group[args->thread_num]; i++)
     {
-        for(int column = 0; column < args->col_b;column++){
-            double s = 0;
-            for (int k = 0; k < args->col_a; k++)
+        for(int column = 0; column < args->cols_B; column++){
+            double sum = 0;
+            for (int k = 0; k < args->cols_A; k++)
             {
-                s += args->A[i][k] * args->B[k][column];
-                    
+                sum += args->mat_A[i][k] * args->mat_B[k][column];
             }
-            args->C[i][column] = s;
+            args->mat_Results[i][column] = sum;
+            sum_of_squares += sum * sum;
         }
     }
+    args->results.sum_of_squares = sum_of_squares;
 }
 
-void mnoz(int num_threads, double **A, int a, int b, double **B, int c, int d, double **C)
+double mnoz(int num_threads, double** mat_A, int rows_A, int cols_A, double** mat_B, int rows_B, int cols_B, double** mat_Results)
 {
-    int i, j, k;
     pthread_t threads[num_threads];
-    int *divisions = (int *)malloc(num_threads * sizeof(int));
-    int size_of_division = a / num_threads;
+    int* works_per_group = (int*)malloc(num_threads * sizeof(int));
+    int work_size = rows_A / num_threads;
 
     for (int i = 0; i < num_threads; i++)
     {
-        divisions[i] = size_of_division;
+        works_per_group[i] = work_size;
     }
 
-    int rest = a - num_threads * size_of_division;
-    int counter = 0;
-    for (int i = rest; i > 0; i--)
+    int rest = rows_A - num_threads * work_size;
+    for (int i = 0; i < rest; i++)
     {
-        divisions[counter] += 1;
-        counter++;
-        if (counter == num_threads)
-        {
-            counter = 0;
-        }
+        works_per_group[i % num_threads]++;
     }
 
     ThreadArgs args[num_threads];
-    for (i = 0; i < num_threads; i++)
+    for (int i = 0; i < num_threads; i++)
     {
-        args[i].id = i;
-        args[i].divisions = divisions;
-        args[i].A = A;
-        args[i].B = B;
-        args[i].C = C;
-        args[i].row_a = a;
-        args[i].col_a = b;
-        args[i].col_b = d;
+        ThreadArgs arg = {
+            .thread_num = i,
+            .works_per_group = works_per_group,
+            .mat_A = mat_A,
+            .mat_B = mat_B,
+            .mat_Results = mat_Results,
+            .rows_A = rows_A,
+            .cols_A = cols_A,
+            .cols_B = cols_B,
+            .results = {
+                .sum_of_squares = 0.0
+            }
+        };
+        args[i] = arg;
         pthread_create(&threads[i], NULL, mnoz_thread, &args[i]);
     }
-    for (i = 0; i < num_threads; i++)
+
+    double sum_of_squares = 0.0;
+    for (int i = 0; i < num_threads; i++)
     {
         pthread_join(threads[i], NULL);
+        sum_of_squares += args[i].results.sum_of_squares;
     }
+
+    return sqrt(sum_of_squares);
 }
 
-print_matrix(double **A, int m, int n)
+void print_matrix(double** A, int m, int n)
 {
-    int i, j;
     printf("[");
-    for (i = 0; i < m; i++)
+    for (int i = 0; i < m; i++)
     {
-        for (j = 0; j < n; j++)
+        for (int j = 0; j < n; j++)
         {
             printf("%f ", A[i][j]);
         }
@@ -90,119 +102,109 @@ print_matrix(double **A, int m, int n)
     }
     printf("]\n");
 }
-int main(int argc, char **argv)
-{
-    FILE *fpa;
-    FILE *fpb;
-    double **A;
-    double **B;
-    double **C;
-    int ma, mb, na, nb;
-    int i, j;
-    double x;
 
-    fpa = fopen("A.txt", "r");
-    fpb = fopen("B.txt", "r");
-    if (fpa == NULL || fpb == NULL)
+int main(int argc, char** argv)
+{
+    FILE* file_a;
+    FILE* file_b;
+    double** mat_A;
+    double** mat_B;
+    double** mat_Results;
+    int rows_A, rows_B, cols_A, cols_B;
+
+    file_a = fopen("A.txt", "r");
+    file_b = fopen("B.txt", "r");
+    if (file_a == NULL || file_b == NULL)
     {
         perror("błąd otwarcia pliku");
         exit(-10);
     }
 
-    fscanf(fpa, "%d", &ma);
-    fscanf(fpa, "%d", &na);
+    fscanf(file_a, "%d", &rows_A);
+    fscanf(file_a, "%d", &cols_A);
 
-    fscanf(fpb, "%d", &mb);
-    fscanf(fpb, "%d", &nb);
+    fscanf(file_b, "%d", &rows_B);
+    fscanf(file_b, "%d", &cols_B);
 
-    printf("pierwsza macierz ma wymiar %d x %d, a druga %d x %d\n", ma, na, mb, nb);
+    printf("pierwsza macierz ma wymiar %d x %d, a druga %d x %d\n", rows_A, cols_A, rows_B, cols_B);
+    printf("Rozmiar macierzy wynikowej: %dx%d\n", rows_A, cols_B);
 
-    if (na != mb)
-    {
-        printf("Złe wymiary macierzy!\n");
-        return EXIT_FAILURE;
-    }
-
-    /*Alokacja pamięci*/
-    A = malloc(ma * sizeof(double));
-    for (i = 0; i < ma; i++)
-    {
-        A[i] = malloc(na * sizeof(double));
-    }
-
-    B = malloc(mb * sizeof(double));
-    for (i = 0; i < mb; i++)
-    {
-        B[i] = malloc(nb * sizeof(double));
-    }
-
-    /*Macierz na wynik*/
-    C = malloc(ma * sizeof(double));
-    for (i = 0; i < ma; i++)
-    {
-        C[i] = malloc(nb * sizeof(double));
-    }
-
-    printf("Rozmiar C: %dx%d\n", ma, nb);
-    for (i = 0; i < ma; i++)
-    {
-        for (j = 0; j < na; j++)
-        {
-            fscanf(fpa, "%lf", &x);
-            A[i][j] = x;
-        }
-    }
-
-    printf("A:\n");
-    print_matrix(A, ma, mb);
-
-    for (i = 0; i < mb; i++)
-    {
-        for (j = 0; j < nb; j++)
-        {
-            fscanf(fpb, "%lf", &x);
-            B[i][j] = x;
-        }
-    }
-
-    printf("B:\n");
-    print_matrix(B, mb, nb);
     if (argc < 2)
     {
         printf("złe wywołanie. ./a <num_threads>");
         return -1;
     }
-    int number_threads = atoi(argv[1]);
-    if (number_threads < 1 || number_threads > ma)
+    int num_threads = atoi(argv[1]);
+    if (num_threads < 1 || num_threads > rows_A)
     {
         printf("złe wywołanie. ./a <num_threads>");
         return -1;
     }
-    mnoz(number_threads, A, ma, na, B, mb, nb, C);
 
-    printf("C:\n");
-    print_matrix(C, ma, nb);
-
-    for (i = 0; i < na; i++)
+    if (cols_A != rows_B)
     {
-        free(A[i]);
+        printf("Złe wymiary macierzy!\n");
+        return EXIT_FAILURE;
     }
-    free(A);
 
-    for (i = 0; i < nb; i++)
+    mat_A = malloc(rows_A * sizeof(double));
+    mat_Results = malloc(rows_A * sizeof(double));
+    for (int i = 0; i < rows_A; i++)
     {
-        free(B[i]);
+        mat_A[i] = malloc(cols_A * sizeof(double));
+        mat_Results[i] = malloc(cols_B * sizeof(double));
     }
-    free(B);
 
-    for (i = 0; i < nb; i++)
+    mat_B = malloc(rows_B * sizeof(double));
+    for (int i = 0; i < rows_B; i++)
     {
-        free(C[i]);
+        mat_B[i] = malloc(cols_B * sizeof(double));
     }
-    free(C);
 
-    fclose(fpa);
-    fclose(fpb);
+    for (int i = 0; i < rows_A; i++)
+    {
+        for (int j = 0; j < cols_A; j++)
+        {
+            double x;
+            fscanf(file_a, "%lf", &x);
+            mat_A[i][j] = x;
+        }
+    }
 
-    return 0;
+    for (int i = 0; i < rows_B; i++)
+    {
+        for (int j = 0; j < cols_B; j++)
+        {
+            double x;
+            fscanf(file_b, "%lf", &x);
+            mat_B[i][j] = x;
+        }
+    }
+
+    double frobenius_norm = mnoz(num_threads, mat_A, rows_A, cols_A, mat_B, rows_B, cols_B, mat_Results);
+
+    printf("A:\n");
+    print_matrix(mat_A, rows_A, rows_B);
+    printf("B:\n");
+    print_matrix(mat_B, rows_B, cols_B);
+    printf("Results:\n");
+    print_matrix(mat_Results, rows_A, cols_B);
+    printf("Frobenius norm: %f\n", frobenius_norm);
+
+    for (int i = 0; i < cols_B; i++)
+    {
+        free(mat_B[i]);
+        free(mat_Results[i]);
+    }
+    for (int i = 0; i < cols_A; i++)
+    {
+        free(mat_A[i]);
+    }
+    free(mat_A);
+    free(mat_B);
+    free(mat_Results);
+    fclose(file_a);
+    fclose(file_b);
+
+    return EXIT_SUCCESS;
 }
