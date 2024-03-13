@@ -27,8 +27,8 @@ public class MatrixMult {
         }
         int numberOfThreads;
 
-            A = read(args[0]);
-            B = read(args[1]);
+        A = read(args[0]);
+        B = read(args[1]);
         try {
             numberOfThreads = Integer.parseInt(args[2]);
             if (numberOfThreads <= 0 || numberOfThreads > A.nrows) {
@@ -91,6 +91,36 @@ public class MatrixMult {
         return C;
     }
 
+    protected Matrix read(String fname) throws FileNotFoundException {
+        File f = new File(fname);
+        Scanner scanner = new Scanner(f).useLocale(Locale.ENGLISH);
+
+        int rows = scanner.nextInt();
+        int cols = scanner.nextInt();
+        Matrix res = new Matrix(rows, cols);
+
+        for (int r = 0; r < res.rows(); r++) {
+            for (int c = 0; c < res.cols(); c++) {
+                res.set(r, c, scanner.nextFloat());
+            }
+        }
+        return res;
+    }
+
+    protected void print(Matrix m) {
+        System.out.println("[");
+        for (int r = 0; r < m.rows(); r++) {
+
+            for (int c = 0; c < m.cols(); c++) {
+                System.out.print(m.get(r, c));
+                System.out.print(" ");
+            }
+
+            System.out.println("");
+        }
+        System.out.println("]");
+    }
+
     public class MultThread implements Runnable {
         Matrix A;
         Matrix B;
@@ -127,36 +157,6 @@ public class MatrixMult {
             }
             return;
         }
-    }
-
-    protected Matrix read(String fname) throws FileNotFoundException {
-        File f = new File(fname);
-        Scanner scanner = new Scanner(f).useLocale(Locale.ENGLISH);
-
-        int rows = scanner.nextInt();
-        int cols = scanner.nextInt();
-        Matrix res = new Matrix(rows, cols);
-
-        for (int r = 0; r < res.rows(); r++) {
-            for (int c = 0; c < res.cols(); c++) {
-                res.set(r, c, scanner.nextFloat());
-            }
-        }
-        return res;
-    }
-
-    protected void print(Matrix m) {
-        System.out.println("[");
-        for (int r = 0; r < m.rows(); r++) {
-
-            for (int c = 0; c < m.cols(); c++) {
-                System.out.print(m.get(r, c));
-                System.out.print(" ");
-            }
-
-            System.out.println("");
-        }
-        System.out.println("]");
     }
 
     public class Matrix {
