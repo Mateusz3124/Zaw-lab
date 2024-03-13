@@ -26,13 +26,13 @@ public class MatrixMult {
             throw new Exception("Wprowadzono za malo argumentow: <nazwa pliku> <nazwa pliku> <liczba watkow>");
         }
         int numberOfThreads;
-        try {
+
             A = read(args[0]);
             B = read(args[1]);
-
+        try {
             numberOfThreads = Integer.parseInt(args[2]);
-            if (numberOfThreads < 0 || numberOfThreads > A.nrows) {
-                throw new Exception("");
+            if (numberOfThreads <= 0 || numberOfThreads > A.nrows) {
+                throw new Exception("Licbza watkow jest nieprawidlowa");
             }
         } catch (Exception e) {
             throw new Exception("Wprowadzone dane sa niewlasciwe");
@@ -91,7 +91,7 @@ public class MatrixMult {
         return C;
     }
 
-     public class MultThread implements Runnable {
+    public class MultThread implements Runnable {
         Matrix A;
         Matrix B;
         Matrix C;
