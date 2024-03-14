@@ -40,7 +40,7 @@ public class MatrixMult {
         } catch (NumberFormatException e) {
             throw new NumberFormatException("Ostatni argument nie jest liczbą");
         }
-        if (numberOfThreads <= 0 || numberOfThreads > A.nrows || numberOfThreads > 300) {
+        if (numberOfThreads <= 0 || numberOfThreads > A.nrows) {
             throw new IllegalArgumentException("Liczba watkow jest nieprawidlowa");
         }
 
