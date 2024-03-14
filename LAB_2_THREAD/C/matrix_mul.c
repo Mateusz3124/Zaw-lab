@@ -21,8 +21,9 @@ typedef struct ThreadArgs_T
 
 double sum_of_Elements_Of_Matrix_Result = 0;
 
-void mnoz_thread(ThreadArgs *args)
+void * mnoz_thread(void *arg)
 {
+    ThreadArgs *args = (ThreadArgs*)arg;
     int start_row_A = 0;
     for (int i = 0; i < args->thread_num; i++)
     {
@@ -50,6 +51,10 @@ double mnoz(int num_threads, double** mat_A, int rows_A, int cols_A, double** ma
 {
     pthread_t threads[num_threads];
     int* works_per_group = (int*)malloc(num_threads * sizeof(int));
+    if(works_per_group == NULL){
+        printf("brak pamieci");
+        exit(EXIT_FAILURE);
+    }
     int work_size = rows_A / num_threads;
 
     for (int i = 0; i < num_threads; i++)
@@ -89,7 +94,7 @@ double mnoz(int num_threads, double** mat_A, int rows_A, int cols_A, double** ma
         pthread_join(threads[i], NULL);
         sum_of_squares += args[i].results.sum_of_squares;
     }
-
+    free(works_per_group);
     return sqrt(sum_of_squares);
 }
 
@@ -152,17 +157,41 @@ int main(int argc, char** argv)
     }
 
     mat_A = malloc(rows_A * sizeof(double));
+    if(mat_A == NULL){
+        printf("brak pamieci");
+        exit(EXIT_FAILURE);
+    }
     mat_Results = malloc(rows_A * sizeof(double));
+    if(mat_Results == NULL){
+        printf("brak pamieci");
+        exit(EXIT_FAILURE);
+    }
     for (int i = 0; i < rows_A; i++)
     {
         mat_A[i] = malloc(cols_A * sizeof(double));
+        if(mat_A[i] == NULL){
+            printf("brak pamieci");
+            exit(EXIT_FAILURE);
+        }
         mat_Results[i] = malloc(cols_B * sizeof(double));
+        if(mat_Results[i] == NULL){
+            printf("brak pamieci");
+            exit(EXIT_FAILURE);
+        }
     }
 
     mat_B = malloc(rows_B * sizeof(double));
+    if(mat_B == NULL){
+        printf("brak pamieci");
+        exit(EXIT_FAILURE);
+    }
     for (int i = 0; i < rows_B; i++)
     {
         mat_B[i] = malloc(cols_B * sizeof(double));
+        if(mat_B[i] == NULL){
+            printf("brak pamieci");
+            exit(EXIT_FAILURE);
+        }
     }
 
     for (int i = 0; i < rows_A; i++)
@@ -197,14 +226,14 @@ int main(int argc, char** argv)
     printf("Frobenius norm: %f\n", frobenius_norm);
     
 
-    for (int i = 0; i < cols_B; i++)
+    for (int i = 0; i < rows_B; i++)
     {
         free(mat_B[i]);
-        free(mat_Results[i]);
     }
-    for (int i = 0; i < cols_A; i++)
+    for (int i = 0; i < rows_A; i++)
     {
         free(mat_A[i]);
+        free(mat_Results[i]);
     }
     free(mat_A);
     free(mat_B);
