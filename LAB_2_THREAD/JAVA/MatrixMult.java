@@ -7,7 +7,7 @@ import static java.lang.Math.sqrt;
 
 public class MatrixMult {
 
-    public double sumOfElementsOfMatrixResult = 0;
+    public float sumOfElementsOfMatrixResult = 0;
     private static final Object lock = new Object();
     public double sumOfSquares;
 
@@ -54,18 +54,18 @@ public class MatrixMult {
 
 
         System.out.println("Wczytalem A:");
-        //print(A);
+        print(A);
 
         System.out.println("\nWczytalem B:");
-        //print(B);
+        print(B);
 
         Matrix C = mult(A, B, numberOfThreads);
         System.out.println("A*B = ");
 
-        //print(C);
+        print(C);
 
-        System.out.printf("Suma elementow wyniku: %.4f\n", sumOfElementsOfMatrixResult);
-        System.out.printf("Frobenius norm: %.4f\n", sqrt(sumOfSquares));
+        System.out.printf("Suma elementow wyniku: %.1f\n", sumOfElementsOfMatrixResult);
+        System.out.printf("Frobenius norm: %.1f\n", sqrt(sumOfSquares));
     }
 
     private Matrix mult(Matrix A, Matrix B, int numThreads) throws Exception{
