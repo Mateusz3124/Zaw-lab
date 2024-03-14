@@ -8,6 +8,7 @@ import static java.lang.Math.sqrt;
 public class MatrixMult {
 
     public double sumOfElementsOfMatrixResult = 0;
+    private static final Object lock = new Object();
     public double sumOfSquares;
 
     public static void main(String[] args) {
@@ -53,15 +54,15 @@ public class MatrixMult {
 
 
         System.out.println("Wczytalem A:");
-        print(A);
+        //print(A);
 
         System.out.println("\nWczytalem B:");
-        print(B);
+        //print(B);
 
         Matrix C = mult(A, B, numberOfThreads);
         System.out.println("A*B = ");
 
-        print(C);
+        //print(C);
 
         System.out.printf("Suma elementow wyniku: %.4f\n", sumOfElementsOfMatrixResult);
         System.out.printf("Frobenius norm: %.4f\n", sqrt(sumOfSquares));
@@ -136,7 +137,7 @@ public class MatrixMult {
         System.out.println("]");
     }
 
-    public class MultThread implements Runnable {
+    private class MultThread implements Runnable {
         Matrix A;
         Matrix B;
         Matrix C;
@@ -159,6 +160,7 @@ public class MatrixMult {
                 startRowA += worksPerGroup[i];
             }
             sumOfSquares = 0.0;
+            float localSumOfElementsOfMatrixResult = 0;
             for (int i = startRowA; i < startRowA + worksPerGroup[iteration]; i++) {
                 for (int column = 0; column < B.ncols; column++) {
                     float sum = 0;
@@ -166,9 +168,12 @@ public class MatrixMult {
                         sum += A.get(i, k) * B.get(k, column);
                     }
                     C.set(i, column, sum);
-                    sumOfElementsOfMatrixResult += sum;
+                    localSumOfElementsOfMatrixResult += sum;
                     sumOfSquares += sum * sum;
                 }
+            }
+            synchronized(lock){
+                sumOfElementsOfMatrixResult += localSumOfElementsOfMatrixResult;
             }
             return;
         }
