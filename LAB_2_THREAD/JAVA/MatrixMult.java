@@ -35,6 +35,9 @@ public class MatrixMult {
         } catch (Exception e) {
             throw new Exception("Blad podczas odczytu danych: "+ e);
         }
+        if(A.cols() != B.rows()){
+            throw new IllegalArgumentException("rozmiary macierzy sa nieprawidlowe, mnozenie jest niezmozliwe");
+        }
         try {
             numberOfThreads = Integer.parseInt(args[2]);
         } catch (NumberFormatException e) {
