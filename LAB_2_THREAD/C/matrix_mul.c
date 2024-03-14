@@ -20,6 +20,7 @@ typedef struct ThreadArgs_T
 } ThreadArgs;
 
 double sum_of_Elements_Of_Matrix_Result = 0;
+pthread_mutex_t lock; 
 
 void * mnoz_thread(void *arg)
 {
@@ -31,6 +32,7 @@ void * mnoz_thread(void *arg)
     }
 
     double sum_of_squares = 0.0;
+    double local_sum_of_Elements_Of_Matrix_Result = 0.0; 
     for (int i = start_row_A; i < start_row_A + args->works_per_group[args->thread_num]; i++)
     {
         for(int column = 0; column < args->cols_B; column++){
@@ -40,10 +42,13 @@ void * mnoz_thread(void *arg)
                 sum += args->mat_A[i][k] * args->mat_B[k][column];
             }
             args->mat_Results[i][column] = sum;
-            sum_of_Elements_Of_Matrix_Result += sum;
+            local_sum_of_Elements_Of_Matrix_Result += sum;
             sum_of_squares += sum * sum;
         }
     }
+    pthread_mutex_lock(&lock); 
+    sum_of_Elements_Of_Matrix_Result += local_sum_of_Elements_Of_Matrix_Result;
+    pthread_mutex_unlock(&lock);     
     args->results.sum_of_squares = sum_of_squares;
 }
 
@@ -94,6 +99,7 @@ double mnoz(int num_threads, double** mat_A, int rows_A, int cols_A, double** ma
         pthread_join(threads[i], NULL);
         sum_of_squares += args[i].results.sum_of_squares;
     }
+    pthread_mutex_destroy(&lock); 
     free(works_per_group);
     return sqrt(sum_of_squares);
 }
@@ -213,6 +219,11 @@ int main(int argc, char** argv)
             mat_B[i][j] = x;
         }
     }
+
+    if (pthread_mutex_init(&lock, NULL) != 0) { 
+        printf("inizjalizacja mutex nie zadzialala\n"); 
+        return 1; 
+    } 
 
     double frobenius_norm = mnoz(num_threads, mat_A, rows_A, cols_A, mat_B, rows_B, cols_B, mat_Results);
 
