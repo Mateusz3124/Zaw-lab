@@ -21,22 +21,33 @@ public class MatrixMult {
     }
 
     protected void start(String[] args) throws Exception {
+        if(args == null){
+            throw new IllegalArgumentException("Argument jest nullem");
+        }
         Matrix A, B;
         if (args.length != 3) {
-            throw new Exception("Wprowadzono za malo argumentow: <nazwa pliku> <nazwa pliku> <liczba watkow>");
+            throw new IllegalArgumentException("Wprowadzono za malo argumentow: <nazwa pliku> <nazwa pliku> <liczba watkow>");
         }
         int numberOfThreads;
-
+        try{
         A = read(args[0]);
         B = read(args[1]);
+        } catch (Exception e) {
+            throw new Exception("Blad podczas odczytu danych: "+ e);
+        }
         try {
             numberOfThreads = Integer.parseInt(args[2]);
-            if (numberOfThreads <= 0 || numberOfThreads > A.nrows) {
-                throw new Exception("Licbza watkow jest nieprawidlowa");
-            }
-        } catch (Exception e) {
-            throw new Exception("Wprowadzone dane sa niewlasciwe");
+        } catch (NumberFormatException e) {
+            throw new NumberFormatException("Ostatni argument nie jest liczbą");
         }
+        if (numberOfThreads <= 0 || numberOfThreads > A.nrows || numberOfThreads > 300) {
+            throw new IllegalArgumentException("Liczba watkow jest nieprawidlowa");
+        }
+
+        if(A.rows() > 1000 || B.rows() > 1000 || A.cols() > 1000 || B.cols() > 1000){
+            throw new Exception("Za duzy rozmiar macierzy");
+        }
+
 
         System.out.println("Wczytalem A:");
         print(A);
@@ -51,12 +62,9 @@ public class MatrixMult {
 
         System.out.printf("Suma elementow wyniku: %.4f\n", sumOfElementsOfMatrixResult);
         System.out.printf("Frobenius norm: %.4f\n", sqrt(sumOfSquares));
-
-        System.out.println("Jak doszedlem tutaj, to pewnie jest ok :-).");
-
     }
 
-    private Matrix mult(Matrix A, Matrix B, int numThreads) {
+    private Matrix mult(Matrix A, Matrix B, int numThreads) throws Exception{
         Matrix C = new Matrix(A.rows(), B.cols());
 
         int[] worksPerGroup = new int[numThreads];
@@ -73,10 +81,14 @@ public class MatrixMult {
 
         Thread[] threads = new Thread[numThreads];
         MultThread[] multThread = new MultThread[numThreads];
-        for (int i = 0; i < numThreads; i++) {
-            multThread[i] = new MultThread(A, B, C, i, worksPerGroup);
-            threads[i] = new Thread(multThread[i]);
-            threads[i].start();
+        try {
+            for (int i = 0; i < numThreads; i++) {
+                multThread[i] = new MultThread(A, B, C, i, worksPerGroup);
+                threads[i] = new Thread(multThread[i]);
+                threads[i].start();
+            }
+        } catch (Exception e) {
+            throw new Exception("Blad podczas rozpoczynania watkow: " + e);
         }
         sumOfSquares = 0.0;
         for (int i = 0; i < numThreads; i++) {
@@ -84,7 +96,7 @@ public class MatrixMult {
                 threads[i].join();
                 sumOfSquares += multThread[i].sumOfSquares;
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                throw e;
             }
         }
 
