@@ -141,6 +141,11 @@ int main(int argc, char** argv)
     fscanf(file_b, "%d", &rows_B);
     fscanf(file_b, "%d", &cols_B);
 
+    if(rows_A > 1000 || rows_A <=0 || cols_A > 1000 || cols_A <=0 ||rows_B > 1000 || rows_B <=0 ||cols_B > 1000 || cols_B <=0){
+        printf("nieprawidlowy rozmiar macierzy\n");
+        return -1;
+    }
+
     printf("pierwsza macierz ma wymiar %d x %d, a druga %d x %d\n", rows_A, cols_A, rows_B, cols_B);
     printf("Rozmiar macierzy wynikowej: %dx%d\n", rows_A, cols_B);
 
