@@ -39,6 +39,12 @@ public class MatrixMult {
         if(A.cols() != B.rows()){
             throw new IllegalArgumentException("rozmiary macierzy sa nieprawidlowe, mnozenie jest niezmozliwe");
         }
+        if(A.rows() > 1000 || B.rows() > 1000 || A.cols() > 1000 || B.cols() > 1000){
+            throw new Exception("Za duzy rozmiar macierzy");
+        }
+        if(A.rows() <= 0 || B.rows() <= 0 || A.cols() <= 0 || B.cols() <= 0){
+            throw new Exception("Rozmiar macierzy jest rowny 0 lub mniejszy od 0");
+        }
         try {
             numberOfThreads = Integer.parseInt(args[2]);
         } catch (NumberFormatException e) {
@@ -47,11 +53,6 @@ public class MatrixMult {
         if (numberOfThreads <= 0 || numberOfThreads > A.nrows) {
             throw new IllegalArgumentException("Liczba watkow jest nieprawidlowa");
         }
-
-        if(A.rows() > 1000 || B.rows() > 1000 || A.cols() > 1000 || B.cols() > 1000){
-            throw new Exception("Za duzy rozmiar macierzy");
-        }
-
 
         System.out.println("Wczytalem A:");
         print(A);
@@ -208,4 +209,4 @@ public class MatrixMult {
     }
 
 
-}
+} 
