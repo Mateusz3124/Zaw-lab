@@ -1,5 +1,5 @@
 from multiprocessing.managers import BaseManager
-import math, sys, time
+import time
 import queue
 
 def read(fname):
@@ -27,17 +27,29 @@ def main(ip, port):
 	mat = read("./A.dat")
 	vec = read("./X.dat")
 	QueueManager.register('in_queue')
+	QueueManager.register('out_queue')
 	manager = QueueManager(address=(ip, int(port)), authkey=bytes('abracadabra', encoding='utf-8'))
 	manager.connect()
 	queue = manager.in_queue()
-	# (indeks_macierzy, wiersz macierzy, wektor)
 
-	queue.put((0, mat[0], vec))
-	queue.put((1, mat[1], vec))
+	num_rows = len(vec[0])
 
-	# for row_index in range(0, len(vec)+1):
-	# 	print(mat[row_index])
-	# 	queue.put((row_index, mat[row_index], vec))
+	queue.put(vec[0])
+	queue.put(num_rows)
 
+	for row_index in range(0, num_rows):
+		queue.put((row_index, mat[row_index]))
+
+	queue_result = manager.out_queue()
+
+	result = [None] * num_rows
+
+	for row_index in range(0, num_rows):
+		value = queue_result.get()
+		result[value[0]] = value[1]
+	print("[")
+	for i in range(num_rows):
+		print(str(result[i]) + ", ")
+	print("]")
 if __name__ == '__main__':
     main("127.0.0.1", 8888)
