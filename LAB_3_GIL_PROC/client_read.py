@@ -37,7 +37,7 @@ def main(ip, port, num_procs):
 
 	num_rows = len(vec[0])
 
-	if len(vec[0]) != len(mat):
+	if num_rows != len(mat[0]):
 		raise ValueError("matrix sizes are incorrect")
 
 	if num_procs > num_rows:
@@ -59,12 +59,12 @@ def main(ip, port, num_procs):
 
 	queue_result = manager.out_queue()
 
-	result = [None] * num_rows
+	result = [None] * len(mat)
 	
 	for i in range(1, len(divisions)):
 		divisions[i] += divisions[i-1]
 
-	for i in range(0, num_rows):
+	for i in range(0, len(mat)):
 		value = queue_result.get()
 		if value[0] == 0:
 			result[value[1]] = value[2]
@@ -73,9 +73,9 @@ def main(ip, port, num_procs):
 		result[idx] = value[2]
 
 	print("[")
-	for i in range(num_rows):
+	for i in range(len(mat)):
 		print(str(result[i]) + ", ")
 	print("]")
 
 if __name__ == '__main__':
-    main(*sys.argv[1:])
+    main('127.0.0.1', 8888, 10)

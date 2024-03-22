@@ -24,7 +24,7 @@ queue = m.in_queue()
 
 while True:
     data = queue.get()
-    with Pool(processes=4) as pool:
+    with Pool(processes=10) as pool:
 
         for i in range(len(data[1])):
             pool.apply_async(f, (data[0],data[1][i],data[2], i))
