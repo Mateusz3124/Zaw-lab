@@ -1,6 +1,5 @@
 from multiprocessing.managers import BaseManager
-import time
-import queue
+import sys
 
 def read(fname):
 	f = open(fname, "r")
@@ -23,9 +22,13 @@ def read(fname):
 class QueueManager(BaseManager): 
     pass
 
-def main(ip, port):
-	mat = read("./A.dat")
-	vec = read("./X.dat")
+def main(ip, port, num_procs):
+	num_procs = int(num_procs)
+	try:
+		mat = read("./A.dat")
+		vec = read("./X.dat")
+	except:
+		raise ValueError("coudn't read matrixes")
 	QueueManager.register('in_queue')
 	QueueManager.register('out_queue')
 	manager = QueueManager(address=(ip, int(port)), authkey=bytes('abracadabra', encoding='utf-8'))
@@ -34,22 +37,45 @@ def main(ip, port):
 
 	num_rows = len(vec[0])
 
-	queue.put(vec[0])
-	queue.put(num_rows)
+	if len(vec[0]) != len(mat):
+		raise ValueError("matrix sizes are incorrect")
 
-	for row_index in range(0, num_rows):
-		queue.put((row_index, mat[row_index]))
+	if num_procs > num_rows:
+		raise ValueError("there are too many processes for the matrix")
+
+	size_of_division = int(len(mat) / num_procs)
+	divisions = []
+	for i in range(num_procs):
+		divisions.append(size_of_division)
+	rest = len(mat) - num_procs * size_of_division;
+	for i in range(int(rest)):
+		divisions[i] += 1 
+	
+	sum = 0
+
+	for i in range(len(divisions)):
+		queue.put((i, mat[sum:sum+divisions[i]],vec))
+		sum += divisions[i]
 
 	queue_result = manager.out_queue()
 
 	result = [None] * num_rows
+	
+	for i in range(1, len(divisions)):
+		divisions[i] += divisions[i-1]
 
-	for row_index in range(0, num_rows):
+	for i in range(0, num_rows):
 		value = queue_result.get()
-		result[value[0]] = value[1]
+		if value[0] == 0:
+			result[value[1]] = value[2]
+			continue
+		idx = divisions[value[0] - 1] + value[1]
+		result[idx] = value[2]
+
 	print("[")
 	for i in range(num_rows):
 		print(str(result[i]) + ", ")
 	print("]")
+
 if __name__ == '__main__':
-    main("127.0.0.1", 8888)
+    main(*sys.argv[1:])
