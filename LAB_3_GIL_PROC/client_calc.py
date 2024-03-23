@@ -4,33 +4,30 @@ from multiprocessing import Array, Pool
 class QueueManager(BaseManager):
     pass
 
-def f(matrix_index, matrix_row, vec, j):
-    sum = 0.0
-    m = QueueManager(address=('127.0.0.1', 8888), authkey=bytes('abracadabra', encoding='utf-8'))
-    m.connect()
-    out_queue = m.out_queue()
-
-    for i in range(len(matrix_row)):
-        sum += matrix_row[i] * vec[0][i]
-    
-    out_queue.put((matrix_index,j,sum))
-
-def main():
-    QueueManager.register('in_queue')
+def f(matrix_index, matrix_rows, vec, j, dif):
+    count = 0
     QueueManager.register('out_queue')
     m = QueueManager(address=('127.0.0.1', 8888), authkey=bytes('abracadabra', encoding='utf-8'))
     m.connect()
-    in_queue = m.in_queue()
+    out_queue = m.out_queue()
+    for matrix_row in matrix_rows:
+        sum = 0.0
 
-    with Pool(processes=10) as pool:
-        while True:
-            data = in_queue.get()
+        for i in range(len(matrix_row)):
+            sum += matrix_row[i] * vec[0][i]
+        
+        out_queue.put((matrix_index,j * dif + count,sum))
+        count += 1
 
-            for i in range(len(data[1])):
-                pool.apply_async(f, (data[0], data[1][i], data[2], i))
-            
-        pool.close()
-        pool.join()
+QueueManager.register('in_queue')
+m = QueueManager(address=('127.0.0.1', 8888), authkey=bytes('abracadabra', encoding='utf-8'))
+m.connect()
+in_queue = m.in_queue()
 
-if __name__ == '__main__':
-	main()
+with Pool(processes=10) as pool:
+    while True:
+        data = in_queue.get()
+        dif = int(len(data[1]) / 9)
+        for i in range(9):
+            pool.apply_async(f, (data[0], data[1][i * dif : i * dif + dif], data[2], i, dif))
+        pool.apply_async(f, (data[0], data[1][9 * dif : len(data[1])], data[2], 9, dif))
