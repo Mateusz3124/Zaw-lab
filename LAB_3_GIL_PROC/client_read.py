@@ -31,7 +31,7 @@ def divide_work(num_work, num_procs):
 
 	return divisions
 
-def main(ip, port, num_procs):
+def read_and_get_answers(ip, port, num_procs):
 	try:
 		mat = read("./A.dat")
 		vec = read("./X.dat")
@@ -74,8 +74,12 @@ def main(ip, port, num_procs):
 		idx = divisions[value[0] - 1] + value[1]
 		result[idx] = value[2]
 
+	return result
+
+def main(ip, port, num_procs):
+	result = read_and_get_answers(ip, port, num_procs)
 	print("[")
-	for i in range(len(mat)):
+	for i in range(len(result)):
 		print(str(result[i]) + ", ")
 	print("]")
 
