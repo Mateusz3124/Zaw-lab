@@ -12,7 +12,7 @@ def main(ip, port):
 	if(len(vec[0]) == 1):
 		vec = from_row_to_col_major_vec(vec)
 
-	for i in range(1, 20, 2):
+	for i in range(1, 7, 1):
 		num_procs = i	
 
 		if len(vec[0]) != len(mat[0]):
@@ -24,7 +24,7 @@ def main(ip, port):
 		t1 = time.time()
 		read_and_get_answers(ip, port, num_procs, mat, vec)
 		t2 = time.time()
-		print(f"Num procs: {i}, time: {t2-t1} [s]")
+		print(f"Num fragments: {i}, time: {t2-t1} [s]")
 
 if __name__ == '__main__':
 	main('127.0.0.1', 8888)

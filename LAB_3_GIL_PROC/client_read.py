@@ -44,7 +44,7 @@ def read_and_get_answers(ip, port, num_procs, mat, vec):
 
 	sum = 0
 	for i in range(len(divisions)):
-		in_queue.put((i, mat[sum:sum+divisions[i]],vec))
+		in_queue.put_nowait((i, mat[sum:sum+divisions[i]],vec))
 		sum += divisions[i]
 
 	for i in range(1, len(divisions)):

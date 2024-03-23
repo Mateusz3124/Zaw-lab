@@ -16,7 +16,7 @@ def f(matrix_index, matrix_rows, vec, j, dif):
         for i in range(len(matrix_row)):
             sum += matrix_row[i] * vec[0][i]
         
-        out_queue.put((matrix_index,j * dif + count,sum))
+        out_queue.put_nowait((matrix_index,j * dif + count,sum))
         count += 1
 
 QueueManager.register('in_queue')
@@ -24,7 +24,8 @@ m = QueueManager(address=('127.0.0.1', 8888), authkey=bytes('abracadabra', encod
 m.connect()
 in_queue = m.in_queue()
 
-with Pool(processes=20) as pool:
+with Pool(processes=30) as pool:
+    counter = 0
     while True:
         data = in_queue.get()
         dif = int(len(data[1]) / 9)
