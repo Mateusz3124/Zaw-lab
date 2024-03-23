@@ -24,10 +24,11 @@ m = QueueManager(address=('127.0.0.1', 8888), authkey=bytes('abracadabra', encod
 m.connect()
 in_queue = m.in_queue()
 
-with Pool(processes=10) as pool:
+with Pool(processes=20) as pool:
     while True:
         data = in_queue.get()
         dif = int(len(data[1]) / 9)
-        for i in range(9):
-            pool.apply_async(f, (data[0], data[1][i * dif : i * dif + dif], data[2], i, dif))
+        if dif != 0:
+            for i in range(9):
+                pool.apply_async(f, (data[0], data[1][i * dif : i * dif + dif], data[2], i, dif))
         pool.apply_async(f, (data[0], data[1][9 * dif : len(data[1])], data[2], 9, dif))
