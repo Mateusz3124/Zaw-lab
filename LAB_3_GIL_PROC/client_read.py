@@ -72,10 +72,16 @@ def main(ip, port, num_procs):
 	num_rows = len(vec[0])
 
 	if num_rows != len(mat[0]):
-		raise ValueError("matrix sizes are incorrect")
+		raise ValueError("matrix size is incorrect")
 
 	if num_procs > num_rows:
 		raise ValueError("there are too many processes for the matrix")
+
+	if len(vec[0]) > 3000:
+		raise ValueError("Vector is too big")
+	
+	if len(mat) > 3000:
+		raise ValueError("Matrix is too big")
 
 	result = read_and_get_answers(ip, port, num_procs, mat, vec)
 	print("[")
