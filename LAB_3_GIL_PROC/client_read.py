@@ -25,7 +25,7 @@ def divide_work(num_work, num_procs):
 	size_of_division = int(num_work / num_procs)
 	rest = num_work - num_procs * size_of_division
 
-	divisions = [size_of_division for _ in range(int(num_work / num_procs))]
+	divisions = [size_of_division for _ in range(num_procs)]
 	for i in range(int(rest)):
 		divisions[i] += 1 
 
@@ -80,4 +80,4 @@ def main(ip, port, num_procs):
 	print("]")
 
 if __name__ == '__main__':
-	main('127.0.0.1', 8888, 10)
+	main('127.0.0.1', 8888, 3)
