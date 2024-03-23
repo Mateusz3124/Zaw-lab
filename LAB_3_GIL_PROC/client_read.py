@@ -1,5 +1,4 @@
 from multiprocessing.managers import BaseManager
-import sys
 
 def read(fname):
 	f = open(fname, "r")
@@ -20,21 +19,34 @@ def read(fname):
 
 
 class QueueManager(BaseManager): 
-    pass
+	pass
+
+def divide_work(num_work, num_procs):
+	size_of_division = int(num_work / num_procs)
+	rest = num_work - num_procs * size_of_division
+
+	divisions = [size_of_division for _ in range(int(num_work / num_procs))]
+	for i in range(int(rest)):
+		divisions[i] += 1 
+
+	return divisions
 
 def main(ip, port, num_procs):
-	num_procs = int(num_procs)
 	try:
 		mat = read("./A.dat")
 		vec = read("./X.dat")
 	except:
 		raise ValueError("coudn't read matrixes")
+
 	QueueManager.register('in_queue')
 	QueueManager.register('out_queue')
 	manager = QueueManager(address=(ip, int(port)), authkey=bytes('abracadabra', encoding='utf-8'))
 	manager.connect()
-	queue = manager.in_queue()
+	
+	in_queue = manager.in_queue()
+	out_queue = manager.out_queue()
 
+	num_procs = int(num_procs)
 	num_rows = len(vec[0])
 
 	if num_rows != len(mat[0]):
@@ -43,29 +55,19 @@ def main(ip, port, num_procs):
 	if num_procs > num_rows:
 		raise ValueError("there are too many processes for the matrix")
 
-	size_of_division = int(len(mat) / num_procs)
-	divisions = []
-	for i in range(num_procs):
-		divisions.append(size_of_division)
-	rest = len(mat) - num_procs * size_of_division;
-	for i in range(int(rest)):
-		divisions[i] += 1 
-	
-	sum = 0
+	divisions = divide_work(len(mat), num_procs)
 
+	sum = 0
 	for i in range(len(divisions)):
-		queue.put((i, mat[sum:sum+divisions[i]],vec))
+		in_queue.put((i, mat[sum:sum+divisions[i]],vec))
 		sum += divisions[i]
 
-	queue_result = manager.out_queue()
-
-	result = [None] * len(mat)
-	
 	for i in range(1, len(divisions)):
 		divisions[i] += divisions[i-1]
 
+	result = [None] * len(mat)
 	for i in range(0, len(mat)):
-		value = queue_result.get()
+		value = out_queue.get()
 		if value[0] == 0:
 			result[value[1]] = value[2]
 			continue
@@ -78,4 +80,4 @@ def main(ip, port, num_procs):
 	print("]")
 
 if __name__ == '__main__':
-    main('127.0.0.1', 8888, 10)
+	main('127.0.0.1', 8888, 10)
