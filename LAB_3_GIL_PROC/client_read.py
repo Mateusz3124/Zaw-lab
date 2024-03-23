@@ -31,31 +31,16 @@ def divide_work(num_work, num_procs):
 
 	return divisions
 
-def read_and_get_answers(ip, port, num_procs):
-	try:
-		mat = read("./A.dat")
-		vec = read("./X.dat")
-	except:
-		raise ValueError("coudn't read matrixes")
+def read_and_get_answers(ip, port, num_procs, mat, vec):
+	divisions = divide_work(len(mat), num_procs)
 
 	QueueManager.register('in_queue')
 	QueueManager.register('out_queue')
 	manager = QueueManager(address=(ip, int(port)), authkey=bytes('abracadabra', encoding='utf-8'))
 	manager.connect()
-	
+
 	in_queue = manager.in_queue()
 	out_queue = manager.out_queue()
-
-	num_procs = int(num_procs)
-	num_rows = len(vec[0])
-
-	if num_rows != len(mat[0]):
-		raise ValueError("matrix sizes are incorrect")
-
-	if num_procs > num_rows:
-		raise ValueError("there are too many processes for the matrix")
-
-	divisions = divide_work(len(mat), num_procs)
 
 	sum = 0
 	for i in range(len(divisions)):
@@ -77,7 +62,22 @@ def read_and_get_answers(ip, port, num_procs):
 	return result
 
 def main(ip, port, num_procs):
-	result = read_and_get_answers(ip, port, num_procs)
+	try:
+		mat = read("./A.dat")
+		vec = read("./X.dat")
+	except:
+		raise ValueError("coudn't read matrixes")
+
+	num_procs = int(num_procs)
+	num_rows = len(vec[0])
+
+	if num_rows != len(mat[0]):
+		raise ValueError("matrix sizes are incorrect")
+
+	if num_procs > num_rows:
+		raise ValueError("there are too many processes for the matrix")
+
+	result = read_and_get_answers(ip, port, num_procs, mat, vec)
 	print("[")
 	for i in range(len(result)):
 		print(str(result[i]) + ", ")
